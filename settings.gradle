@@ -1,0 +1,5 @@
+rootProject.name = 'HabitFlow'
+
+include 'eureka-server'
+include 'userService'
+include 'habitService'
