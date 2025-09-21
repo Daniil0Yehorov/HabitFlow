@@ -1,9 +1,11 @@
 package com.habitFlow.userService.controller;
 
+import com.habitFlow.userService.dto.UserDto;
 import com.habitFlow.userService.model.User;
 import com.habitFlow.userService.service.JwtUtil;
 import com.habitFlow.userService.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -16,19 +18,16 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    public User getCurrentUser(@RequestHeader("Authorization") String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
-
-        if (jwtUtil.isTokenExpired(token)) {
-            throw new RuntimeException("Token expired");
-        }
-
+    public ResponseEntity<UserDto> getMe(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
         String username = jwtUtil.extractUsername(token);
-        return userService.findByUsername(username);
+
+        User user = userService.findByUsername(username);
+        if (user == null) {
+            return ResponseEntity.status(404).build();
+        }
+
+        return ResponseEntity.ok(new UserDto(user.getUsername(), user.getEmail()));
     }
+
 }

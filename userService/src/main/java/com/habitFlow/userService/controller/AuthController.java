@@ -1,16 +1,19 @@
 package com.habitFlow.userService.controller;
 
 
+import com.habitFlow.userService.dto.AuthResponse;
+import com.habitFlow.userService.dto.LoginRequest;
+import com.habitFlow.userService.dto.RegisterRequest;
 import com.habitFlow.userService.model.RefreshToken;
 import com.habitFlow.userService.model.User;
 import com.habitFlow.userService.service.JwtUtil;
 import com.habitFlow.userService.service.RefreshTokenService;
 import com.habitFlow.userService.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -22,45 +25,49 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
+
+        User user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(request.getPassword())
+                .build();
+
         userService.registerUser(user);
-        return "User registered!";
+        return ResponseEntity.ok("User registered!");
     }
 
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody User user) {
-        User found = userService.findByUsername(user.getUsername());
-        if (found != null && passwordEncoder.matches(user.getPassword(), found.getPassword())) {
-            String accessToken = jwtUtil.generateAccessToken(found.getUsername(), 15 * 60 * 1000); // 15 мин
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        User found = userService.findByUsername(request.getUsername());
+
+        if (found != null && passwordEncoder.matches(request.getPassword(),
+                found.getPassword())) {
+
+            String accessToken = jwtUtil.generateAccessToken(found.getUsername());
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(found);
 
-            return Map.of(
-                    "accessToken", accessToken,
-                    "refreshToken", refreshToken.getToken()
-            );
+            return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken()));
         }
-        throw new RuntimeException("Invalid credentials");
+        return ResponseEntity.status(401).build();
     }
 
     @PostMapping("/refresh")
-    public Map<String, String> refresh(@RequestBody Map<String, String> request) {
-        String refreshTokenStr = request.get("refreshToken");
-
+    public ResponseEntity<AuthResponse> refresh(@RequestBody String refreshTokenStr) {
         RefreshToken rt = refreshTokenService.findByToken(refreshTokenStr)
                 .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
 
         if (!refreshTokenService.validateRefreshToken(rt)) {
-            throw new RuntimeException("Refresh token expired or revoked");
+            return ResponseEntity.status(401).build();
         }
 
-        String newAccessToken = jwtUtil.generateAccessToken(rt.getUser().getUsername(), 15 * 60 * 1000);
-        return Map.of("accessToken", newAccessToken);
+        String newAccessToken = jwtUtil.generateAccessToken(rt.getUser().getUsername());
+        return ResponseEntity.ok(new AuthResponse(newAccessToken, refreshTokenStr));
     }
 
     @PostMapping("/logout")
-    public String logout(@RequestBody Map<String, String> request) {
-        String refreshToken = request.get("refreshToken");
+    public ResponseEntity<String> logout(@RequestBody String refreshToken) {
         refreshTokenService.revokeToken(refreshToken);
-        return "Logged out successfully";
+        return ResponseEntity.ok("Logged out successfully");
     }
 }

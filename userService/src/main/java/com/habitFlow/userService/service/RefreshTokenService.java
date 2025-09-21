@@ -5,6 +5,7 @@ import com.habitFlow.userService.model.User;
 import com.habitFlow.userService.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -16,11 +17,14 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
 
+    @Value("${jwt.refresh-token-expiration}")
+    private long refreshTokenExpiration;
+
     public RefreshToken createRefreshToken(User user) {
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
                 .token(UUID.randomUUID().toString())
-                .expiryDate(Instant.now().plusSeconds(60 * 60 * 24 * 7))
+                .expiryDate(Instant.now().plusMillis(refreshTokenExpiration))
                 .revoked(false)
                 .build();
         return refreshTokenRepository.save(refreshToken);
@@ -31,7 +35,8 @@ public class RefreshTokenService {
     }
 
     public boolean validateRefreshToken(RefreshToken token) {
-        return token != null && !token.isRevoked() && token.getExpiryDate().isAfter(Instant.now());
+        return token != null && !token.isRevoked()
+                && token.getExpiryDate().isAfter(Instant.now());
     }
 
     public void revokeToken(String token) {
