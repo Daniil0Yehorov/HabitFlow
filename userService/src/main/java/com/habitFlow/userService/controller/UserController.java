@@ -17,6 +17,7 @@ public class UserController {
     private final JwtUtil jwtUtil;
     private final UserService userService;
 
+    //useless mb
     @GetMapping("/me")
     public ResponseEntity<UserDto> getMe(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
@@ -27,7 +28,7 @@ public class UserController {
             return ResponseEntity.status(404).build();
         }
 
-        return ResponseEntity.ok(new UserDto(user.getUsername(), user.getEmail()));
+        return ResponseEntity.ok(new UserDto(user.getId(),user.getUsername(), user.getEmail()));
     }
 
 }

@@ -1,4 +1,4 @@
-package com.habitFlow.userService.dto;
+package com.habitFlow.habitService.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UserDto {
+
     private Long id;
     private String username;
     private String email;

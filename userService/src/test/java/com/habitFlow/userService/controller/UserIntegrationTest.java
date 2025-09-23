@@ -96,4 +96,22 @@ class UserIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void shouldAllowAccessWithServiceToken() throws Exception {
+        String serviceToken = jwtUtil.generateServiceToken("user-service");
+
+        mockMvc.perform(get("/auth/internal/" + testUser.getId())
+                        .header("Authorization", "Bearer " + serviceToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(testUser.getUsername()));
+    }
+
+    @Test
+    void shouldDenyAccessWithUserToken() throws Exception {
+        mockMvc.perform(get("/auth/internal/" + testUser.getId())
+                        .header("Authorization", "Bearer " + validToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
 }

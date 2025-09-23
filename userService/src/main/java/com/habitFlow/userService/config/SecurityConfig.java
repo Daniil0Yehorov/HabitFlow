@@ -11,21 +11,26 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final ServiceJwtFilter serviceJwtFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login","/auth/logout",
+                                "/auth/refresh","/user/me").permitAll()
+                        .requestMatchers("/auth/internal/**").hasRole("SERVICE")
                         .requestMatchers("/eureka/**").permitAll()
-                        .requestMatchers("/user/**").permitAll()
                         .anyRequest().authenticated()
-                );
+                )
+                .addFilterBefore(serviceJwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
