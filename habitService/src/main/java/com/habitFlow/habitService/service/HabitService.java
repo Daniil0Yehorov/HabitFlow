@@ -34,33 +34,64 @@ public class HabitService {
         return HabitMapper.toDto(habitRepository.save(habit));
     }
 
-    public HabitDto updateHabit(Long id, HabitDto dto) {
+    public List<HabitDto> getHabitsByUsername(String username) {
+        Long userId = userService.getUserIdByUsername(username);
+
+        return habitRepository.findByUserId(userId)
+                .stream()
+                .map(HabitMapper::toDto)
+                .toList();
+    }
+
+    public HabitDto getHabitByIdAndUsername(Long id, String username) {
+        Long userId = userService.getUserIdByUsername(username);
+
+        Habit habit = habitRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Habit not found"));
+
+        if (!habit.getUserId().equals(userId)) {
+            throw new ResourceNotFoundException("You don’t have access to this habit");
+        }
+
+        return HabitMapper.toDto(habit);
+    }
+
+    public HabitDto updateHabit(Long id, HabitDto dto, String username) {
+        Long userId = userService.getUserIdByUsername(username);
+        if (userId == null) {
+            throw new ResourceNotFoundException("User not found: " + username);
+        }
+
         return habitRepository.findById(id)
                 .map(habit -> {
-                    habit.setTitle(dto.getTitle());
-                    habit.setDescription(dto.getDescription());
-                    habit.setFrequency(dto.getFrequency());
-                    habit.setStartDate(dto.getStartDate());
-                    habit.setEndDate(dto.getEndDate());
-                    habit.setStatus(dto.getStatus());
+                    if (!habit.getUserId().equals(userId)) {
+                        throw new ResourceNotFoundException("Habit not found for this user: " + id);
+                    }
+
+                    if (dto.getTitle() != null) habit.setTitle(dto.getTitle());
+                    if (dto.getDescription() != null) habit.setDescription(dto.getDescription());
+                    if (dto.getFrequency() != null) habit.setFrequency(dto.getFrequency());
+                    if (dto.getStartDate() != null) habit.setStartDate(dto.getStartDate());
+                    if (dto.getEndDate() != null) habit.setEndDate(dto.getEndDate());
+                    if (dto.getStatus() != null) habit.setStatus(dto.getStatus());
+
                     habit.setUpdatedAt(LocalDateTime.now());
+
                     return HabitMapper.toDto(habitRepository.save(habit));
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Habit not found with id: " + id));
     }
 
-    public void deleteHabit(Long id) {
-        if (!habitRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Habit not found with id: " + id);
+    public void deleteHabit(Long id, String username) {
+        Long userId = userService.getUserIdByUsername(username);
+
+        Habit habit = habitRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Habit not found"));
+
+        if (!habit.getUserId().equals(userId)) {
+            throw new ResourceNotFoundException("You don’t have access to this habit");
         }
-        habitRepository.deleteById(id);
-    }
-    public Optional<HabitDto> getHabit(Long id) {
-        return habitRepository.findById(id).map(HabitMapper::toDto);
-    }
-    public List<HabitDto> getHabitsByUser(Long userId) {
-        return habitRepository.findByUserId(userId).
-                stream().map(HabitMapper::toDto)
-                .toList();
+
+        habitRepository.delete(habit);
     }
 }
