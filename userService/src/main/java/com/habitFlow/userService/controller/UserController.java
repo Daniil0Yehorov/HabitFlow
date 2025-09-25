@@ -2,10 +2,12 @@ package com.habitFlow.userService.controller;
 
 import com.habitFlow.userService.dto.UserDto;
 import com.habitFlow.userService.model.User;
-import com.habitFlow.userService.service.JwtUtil;
+import com.habitFlow.userService.config.JwtUtil;
 import com.habitFlow.userService.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -19,16 +21,15 @@ public class UserController {
 
     //useless mb
     @GetMapping("/me")
-    public ResponseEntity<UserDto> getMe(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
-        String username = jwtUtil.extractUsername(token);
+    public ResponseEntity<UserDto> getMe() {
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         User user = userService.findByUsername(username);
-        if (user == null) {
-            return ResponseEntity.status(404).build();
-        }
+        if (user == null) return ResponseEntity.notFound().build();
 
-        return ResponseEntity.ok(new UserDto(user.getId(),user.getUsername(), user.getEmail()));
+        return ResponseEntity.ok(new UserDto(user.getId(), user.getUsername(), user.getEmail()));
     }
+    //change stats about yourself "add later"
 
 }

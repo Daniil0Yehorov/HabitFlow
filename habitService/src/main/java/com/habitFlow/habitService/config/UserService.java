@@ -20,29 +20,35 @@ public class UserService {
 
     public Long getUserIdByUsername(String username) {
         String token = tokenProvider.getServiceToken();
+        if (token == null || token.isBlank()) {
+            throw new RuntimeException("[UserService] Service token is null or empty!");
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
 
         String url = userServiceUrl + "/auth/internal/username/" + username;
 
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
         try {
             ResponseEntity<UserDto> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
-                    new HttpEntity<>(headers),
+                    requestEntity,
                     UserDto.class
             );
 
             if (response.getBody() == null) {
-                throw new RuntimeException("User not found: " + username);
+                throw new RuntimeException("[UserService] User not found: " + username);
             }
 
             return response.getBody().getId();
 
         } catch (HttpStatusCodeException ex) {
-            throw new RuntimeException("Error fetching userId: " + ex.getStatusCode());
+           throw new RuntimeException("Error fetching userId: " + ex.getStatusCode());
         } catch (Exception e) {
-            throw new RuntimeException("Internal error fetching userId");
+             throw new RuntimeException("Internal error fetching userId");
         }
     }
 }

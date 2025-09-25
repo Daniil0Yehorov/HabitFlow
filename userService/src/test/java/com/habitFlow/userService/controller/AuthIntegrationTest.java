@@ -5,7 +5,7 @@ import com.habitFlow.userService.dto.LoginRequest;
 import com.habitFlow.userService.dto.RegisterRequest;
 import com.habitFlow.userService.model.User;
 import com.habitFlow.userService.repository.RefreshTokenRepository;
-import com.habitFlow.userService.service.JwtUtil;
+import com.habitFlow.userService.config.JwtUtil;
 import com.habitFlow.userService.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

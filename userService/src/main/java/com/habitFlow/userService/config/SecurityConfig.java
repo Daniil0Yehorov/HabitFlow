@@ -18,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final ServiceJwtFilter serviceJwtFilter;
+    private final UserJwtFilter userJwtFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -25,12 +26,14 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/register", "/auth/login","/auth/logout",
-                                "/auth/refresh","/user/me").permitAll()
+                                "/auth/refresh").permitAll()
                         .requestMatchers("/auth/internal/**").hasRole("SERVICE")
-                        .requestMatchers("/eureka/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/user/me").authenticated()//
+                        .requestMatchers("/eureka/**").permitAll()//
+                        .anyRequest().denyAll()
                 )
-                .addFilterBefore(serviceJwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(serviceJwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(userJwtFilter, ServiceJwtFilter.class);
         return http.build();
     }
 

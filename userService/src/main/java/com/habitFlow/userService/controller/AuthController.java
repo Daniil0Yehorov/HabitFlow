@@ -7,12 +7,13 @@ import com.habitFlow.userService.dto.RegisterRequest;
 import com.habitFlow.userService.dto.UserDto;
 import com.habitFlow.userService.model.RefreshToken;
 import com.habitFlow.userService.model.User;
-import com.habitFlow.userService.service.JwtUtil;
+import com.habitFlow.userService.config.JwtUtil;
 import com.habitFlow.userService.service.RefreshTokenService;
 import com.habitFlow.userService.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -73,27 +74,7 @@ public class AuthController {
         return ResponseEntity.ok("Logged out successfully");
     }
 
-   /* @GetMapping("/internal/{id}")
-    public ResponseEntity<UserDto> getUserForInternal(
-            @PathVariable Long id,
-            @RequestHeader("Authorization") String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).build();
-        }
-        String token = authHeader.substring(7);
-
-        if (!jwtUtil.isServiceToken(token)) {
-            return ResponseEntity.status(401).build();
-        }
-
-        UserDto dto = userService.findUserById(String.valueOf(id));
-        if (dto == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(dto);
-    }
-*/
-
-    @GetMapping("/internal/username/{username}")
+    /*@GetMapping("/internal/username/{username}")
     public ResponseEntity<UserDto> getUserByUsername(
             @PathVariable String username,
             @RequestHeader("Authorization") String authHeader) {
@@ -115,6 +96,25 @@ public class AuthController {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .build());
-    }
+    }*/
+    @GetMapping("/internal/username/{username}")
+    public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
 
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SERVICE"))) {
+            return ResponseEntity.status(401).build();
+        }
+
+        User user = userService.findByUsername(username);
+        if (user == null) return ResponseEntity.notFound().build();
+
+        UserDto dto = UserDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .build();
+
+        return ResponseEntity.ok(dto);
+    }
 }

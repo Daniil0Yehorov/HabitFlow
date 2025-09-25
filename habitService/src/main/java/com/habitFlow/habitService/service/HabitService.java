@@ -2,6 +2,7 @@ package com.habitFlow.habitService.service;
 
 import com.habitFlow.habitService.config.UserService;
 import com.habitFlow.habitService.dto.HabitDto;
+import com.habitFlow.habitService.exception.ForbiddenException;
 import com.habitFlow.habitService.exception.ResourceNotFoundException;
 import com.habitFlow.habitService.mapper.HabitMapper;
 import com.habitFlow.habitService.model.Habit;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -47,10 +47,10 @@ public class HabitService {
         Long userId = userService.getUserIdByUsername(username);
 
         Habit habit = habitRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Habit not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Habit not found with id: " + id));
 
         if (!habit.getUserId().equals(userId)) {
-            throw new ResourceNotFoundException("You don’t have access to this habit");
+            throw new ForbiddenException("You don’t have access to this habit");
         }
 
         return HabitMapper.toDto(habit);
@@ -65,7 +65,7 @@ public class HabitService {
         return habitRepository.findById(id)
                 .map(habit -> {
                     if (!habit.getUserId().equals(userId)) {
-                        throw new ResourceNotFoundException("Habit not found for this user: " + id);
+                        throw new ForbiddenException("You cannot update this habit");
                     }
 
                     if (dto.getTitle() != null) habit.setTitle(dto.getTitle());
@@ -86,10 +86,10 @@ public class HabitService {
         Long userId = userService.getUserIdByUsername(username);
 
         Habit habit = habitRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Habit not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Habit not found with id: " + id));
 
         if (!habit.getUserId().equals(userId)) {
-            throw new ResourceNotFoundException("You don’t have access to this habit");
+            throw new ForbiddenException("You don’t have access to delete this habit");
         }
 
         habitRepository.delete(habit);

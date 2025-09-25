@@ -1,4 +1,4 @@
-package com.habitFlow.userService.service;
+package com.habitFlow.userService.config;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

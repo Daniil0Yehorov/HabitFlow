@@ -6,6 +6,7 @@ import com.habitFlow.habitService.service.HabitService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,32 +21,23 @@ public class HabitController {
 
     @PostMapping
     public ResponseEntity<HabitDto> createHabit(
-            @RequestBody HabitDto habitDto,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestBody HabitDto habitDto) {
 
-        String token = authHeader.substring(7);
-        String username = jwtUtil.extractUsername(token);
-
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(habitService.createHabit(habitDto, username));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<HabitDto>> getMyHabits(
-            @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<List<HabitDto>> getMyHabits() {
 
-        String token = authHeader.substring(7);
-        String username = jwtUtil.extractUsername(token);
-
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(habitService.getHabitsByUsername(username));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<HabitDto> getHabit(
-            @PathVariable Long id,
-            @RequestHeader("Authorization") String authHeader) {
-
-        String token = authHeader.substring(7);
-        String username = jwtUtil.extractUsername(token);
+            @PathVariable Long id) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         return ResponseEntity.ok(habitService.getHabitByIdAndUsername(id, username));
     }
@@ -53,22 +45,16 @@ public class HabitController {
     @PutMapping("/{id}")
     public ResponseEntity<HabitDto> updateHabit(
             @PathVariable Long id,
-            @RequestBody HabitDto habitDto,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestBody HabitDto habitDto) {
 
-        String token = authHeader.substring(7);
-        String username = jwtUtil.extractUsername(token);
-
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(habitService.updateHabit(id, habitDto, username));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteHabit(
-            @PathVariable Long id,
-            @RequestHeader("Authorization") String authHeader) {
-
-        String token = authHeader.substring(7);
-        String username = jwtUtil.extractUsername(token);
+            @PathVariable Long id) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         habitService.deleteHabit(id, username);
         return ResponseEntity.noContent().build();

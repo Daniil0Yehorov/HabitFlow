@@ -1,12 +1,10 @@
 package com.habitFlow.userService.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.habitFlow.userService.dto.LoginRequest;
-import com.habitFlow.userService.dto.RegisterRequest;
 import com.habitFlow.userService.model.User;
 import com.habitFlow.userService.repository.RefreshTokenRepository;
 import com.habitFlow.userService.repository.UserRepository;
-import com.habitFlow.userService.service.JwtUtil;
+import com.habitFlow.userService.config.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
