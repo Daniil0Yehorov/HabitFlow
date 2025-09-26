@@ -2,7 +2,6 @@ package com.habitFlow.habitService.config;
 
 import com.habitFlow.habitService.dto.UserDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -12,11 +11,8 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final ServiceTokenProvider tokenProvider;
-
-    @Value("${user-service.url}")
-    private String userServiceUrl;
 
     public Long getUserIdByUsername(String username) {
         String token = tokenProvider.getServiceToken();
@@ -27,7 +23,7 @@ public class UserService {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
 
-        String url = userServiceUrl + "/auth/internal/username/" + username;
+        String url = "http://USER-SERVICE/auth/internal/username/" + username;
 
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
@@ -46,9 +42,9 @@ public class UserService {
             return response.getBody().getId();
 
         } catch (HttpStatusCodeException ex) {
-           throw new RuntimeException("Error fetching userId: " + ex.getStatusCode());
+            throw new RuntimeException("[UserService] Error fetching userId: " + ex.getStatusCode(), ex);
         } catch (Exception e) {
-             throw new RuntimeException("Internal error fetching userId");
+            throw new RuntimeException("[UserService] Internal error fetching userId", e);
         }
     }
 }
