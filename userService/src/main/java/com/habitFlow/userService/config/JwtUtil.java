@@ -82,11 +82,14 @@ public class JwtUtil {
                 .compact();
     }
 
-    public boolean isServiceToken(String token) {
+    public boolean isServiceToken(String token, String expectedService) {
         try {
             Claims claims = parseClaims(token);
             String role = claims.get("role", String.class);
-            return "SERVICE".equals(role);
+            String subject = claims.getSubject();
+            return "SERVICE".equals(role)
+                    && expectedService.replace("-", "")
+                    .equalsIgnoreCase(subject.replace("-", ""));
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }

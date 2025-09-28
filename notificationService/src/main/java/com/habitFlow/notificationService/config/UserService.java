@@ -1,8 +1,11 @@
-package com.habitFlow.habitService.config;
+package com.habitFlow.notificationService.config;
 
-import com.habitFlow.habitService.dto.UserDto;
+import com.habitFlow.notificationService.dto.UserDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;

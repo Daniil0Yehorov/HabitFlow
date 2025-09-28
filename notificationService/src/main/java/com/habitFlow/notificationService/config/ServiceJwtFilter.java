@@ -1,4 +1,4 @@
-package com.habitFlow.userService.config;
+package com.habitFlow.notificationService.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,14 +26,10 @@ public class ServiceJwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
-
-        System.out.println("[ServiceJwtFilter] URI: " + request.getRequestURI());
-        System.out.println("[ServiceJwtFilter] Before set Authentication: " + SecurityContextHolder.getContext().getAuthentication());
-        System.out.println("[ServiceJwtFilter] AuthHeader: " + authHeader);
+        System.out.println("[ServiceJwtFilter] Authorization header: " + request.getHeader("Authorization"));
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            System.out.println("[ServiceJwtFilter] Received token: " + token);
 
             if (jwtUtil.isServiceToken(token, "HABIT-SERVICE")) {
                 System.out.println("[ServiceJwtFilter] Valid token from HABIT-SERVICE");
@@ -45,20 +41,18 @@ public class ServiceJwtFilter extends OncePerRequestFilter {
                                 List.of(new SimpleGrantedAuthority("ROLE_SERVICE"))
                         );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                System.out.println("[ServiceJwtFilter] After set Authentication: " + SecurityContextHolder.getContext().getAuthentication());
 
             }
-            else if (jwtUtil.isServiceToken(token, "NOTIFICATION-SERVICE")) {
-                System.out.println("[ServiceJwtFilter] Valid token from HABIT-SERVICE");
+            else if (jwtUtil.isServiceToken(token, "USER-SERVICE")) {
+                System.out.println("[ServiceJwtFilter] Valid token from USER-SERVICE");
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                "NOTIFICATION-SERVICE",
+                                "USER-SERVICE",
                                 null,
                                 List.of(new SimpleGrantedAuthority("ROLE_SERVICE"))
                         );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                System.out.println("[ServiceJwtFilter] After set Authentication: " + SecurityContextHolder.getContext().getAuthentication());
 
             }
             else {
@@ -67,11 +61,10 @@ public class ServiceJwtFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-        System.out.println("[ServiceJwtFilter] After filterChain.doFilter: " + SecurityContextHolder.getContext().getAuthentication());
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith("/auth/internal/");
+        return !request.getRequestURI().startsWith("/notifications/");
     }
 }

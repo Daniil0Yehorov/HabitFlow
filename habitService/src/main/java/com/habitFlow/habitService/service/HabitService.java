@@ -1,7 +1,10 @@
 package com.habitFlow.habitService.service;
 
+import com.habitFlow.habitService.config.NotificationClient;
 import com.habitFlow.habitService.config.UserService;
+import com.habitFlow.habitService.dto.EmailRequest;
 import com.habitFlow.habitService.dto.HabitDto;
+import com.habitFlow.habitService.dto.UserDto;
 import com.habitFlow.habitService.exception.ForbiddenException;
 import com.habitFlow.habitService.exception.ResourceNotFoundException;
 import com.habitFlow.habitService.mapper.HabitMapper;
@@ -19,37 +22,45 @@ public class HabitService {
 
     private final HabitRepository habitRepository;
     private final UserService userService;
+    private final NotificationClient notificationClient;
 
     public HabitDto createHabit(HabitDto dto, String username) {
-        Long userId = userService.getUserIdByUsername(username);
-        if (userId == null) {
+        UserDto userdto = userService.getUserByUsername(username);
+        if (userdto.getId() == null) {
             throw new ResourceNotFoundException("User not found: " + username);
         }
 
         Habit habit = HabitMapper.toEntity(dto);
-        habit.setUserId(userId);
+        habit.setUserId(userdto.getId());
         habit.setCreatedAt(LocalDateTime.now());
         habit.setUpdatedAt(LocalDateTime.now());
 
+        EmailRequest email = new EmailRequest();
+        email.setTo(userdto.getEmail());
+        email.setSubject("New Habit 🎉");
+        email.setMessage("Hi, " + username + "! Your Habit '"
+                + dto.getTitle() + "' created succesfully.");
+
+        notificationClient.sendEmail(email);
         return HabitMapper.toDto(habitRepository.save(habit));
     }
 
     public List<HabitDto> getHabitsByUsername(String username) {
-        Long userId = userService.getUserIdByUsername(username);
+        UserDto dto = userService.getUserByUsername(username);
 
-        return habitRepository.findByUserId(userId)
+        return habitRepository.findByUserId(dto.getId())
                 .stream()
                 .map(HabitMapper::toDto)
                 .toList();
     }
 
     public HabitDto getHabitByIdAndUsername(Long id, String username) {
-        Long userId = userService.getUserIdByUsername(username);
+        UserDto userdto = userService.getUserByUsername(username);
 
         Habit habit = habitRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Habit not found with id: " + id));
 
-        if (!habit.getUserId().equals(userId)) {
+        if (!habit.getUserId().equals(userdto.getId())) {
             throw new ForbiddenException("You don’t have access to this habit");
         }
 
@@ -57,14 +68,14 @@ public class HabitService {
     }
 
     public HabitDto updateHabit(Long id, HabitDto dto, String username) {
-        Long userId = userService.getUserIdByUsername(username);
-        if (userId == null) {
+        UserDto userdto = userService.getUserByUsername(username);
+        if (userdto.getId() == null) {
             throw new ResourceNotFoundException("User not found: " + username);
         }
 
         return habitRepository.findById(id)
                 .map(habit -> {
-                    if (!habit.getUserId().equals(userId)) {
+                    if (!habit.getUserId().equals(userdto.getId())) {
                         throw new ForbiddenException("You cannot update this habit");
                     }
 
@@ -83,12 +94,12 @@ public class HabitService {
     }
 
     public void deleteHabit(Long id, String username) {
-        Long userId = userService.getUserIdByUsername(username);
+        UserDto userdto = userService.getUserByUsername(username);
 
         Habit habit = habitRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Habit not found with id: " + id));
 
-        if (!habit.getUserId().equals(userId)) {
+        if (!habit.getUserId().equals(userdto.getId())) {
             throw new ForbiddenException("You don’t have access to delete this habit");
         }
 
