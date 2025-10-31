@@ -28,7 +28,8 @@ public class ServiceJwtFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         System.out.println("[ServiceJwtFilter] URI: " + request.getRequestURI());
-        System.out.println("[ServiceJwtFilter] Before set Authentication: " + SecurityContextHolder.getContext().getAuthentication());
+        System.out.println("[ServiceJwtFilter] Before set Authentication: " +
+                SecurityContextHolder.getContext().getAuthentication());
         System.out.println("[ServiceJwtFilter] AuthHeader: " + authHeader);
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -49,7 +50,7 @@ public class ServiceJwtFilter extends OncePerRequestFilter {
 
             }
             else if (jwtUtil.isServiceToken(token, "NOTIFICATION-SERVICE")) {
-                System.out.println("[ServiceJwtFilter] Valid token from HABIT-SERVICE");
+                System.out.println("[ServiceJwtFilter] Valid token from NOTIFICATION-SERVICE");
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
@@ -62,7 +63,13 @@ public class ServiceJwtFilter extends OncePerRequestFilter {
 
             }
             else {
-                System.out.println("[ServiceJwtFilter] Invalid service token");
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                jwtUtil.extractUsername(token),
+                                null,
+                                List.of()
+                        );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
 

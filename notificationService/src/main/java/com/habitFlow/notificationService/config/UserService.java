@@ -1,11 +1,9 @@
 package com.habitFlow.notificationService.config;
 
 import com.habitFlow.notificationService.dto.UserDto;
+import com.habitFlow.notificationService.exception.custom.UserServiceException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
@@ -20,7 +18,7 @@ public class UserService {
     public UserDto getUserByUsername(String username) {
         String token = tokenProvider.getServiceToken();
         if (token == null || token.isBlank()) {
-            throw new RuntimeException("[UserService] Service token is null or empty!");
+            throw new UserServiceException("[UserService] Service token is null or empty!");
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -39,15 +37,48 @@ public class UserService {
             );
 
             if (response.getBody() == null) {
-                throw new RuntimeException("[UserService] User not found: " + username);
+                throw new UserServiceException("[UserService] User not found: " + username);
             }
 
             return response.getBody();
 
         } catch (HttpStatusCodeException ex) {
-            throw new RuntimeException("[UserService] Error fetching userId: " + ex.getStatusCode(), ex);
+            throw new UserServiceException("[UserService] Error fetching userId: " + ex.getStatusCode(), ex);
         } catch (Exception e) {
-            throw new RuntimeException("[UserService] Internal error fetching userId", e);
+            throw new UserServiceException("[UserService] Internal error fetching userId", e);
+        }
+    }
+
+    public boolean existsById(Long userId) {
+        String token = tokenProvider.getServiceToken();
+        if (token == null || token.isBlank()) {
+            throw new UserServiceException("[UserService] Service token is null or empty!");
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        String url = "http://USER-SERVICE/auth/internal/id/" + userId;
+
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Void> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    requestEntity,
+                    Void.class
+            );
+
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (HttpStatusCodeException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return false;
+            }
+            throw new UserServiceException("[UserService] Error checking user existence: " +
+                    ex.getStatusCode(), ex);
+        } catch (Exception e) {
+            throw new UserServiceException("[UserService] Internal error checking user existence", e);
         }
     }
 }

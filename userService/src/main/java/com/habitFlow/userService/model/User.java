@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -28,4 +29,11 @@ public class User{
     @Column(nullable = false,unique = true,length = 320)
     private String email;
 
+    @Column(nullable = false)
+    private boolean emailVerified = false;
+
+    private String verificationCode;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt= LocalDateTime.now();
 }

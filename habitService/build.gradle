@@ -24,7 +24,7 @@ dependencies {
 	// loadBalancer
 	implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
 
-
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 }
 dependencyManagement {
 	imports {

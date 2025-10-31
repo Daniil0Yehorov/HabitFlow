@@ -4,8 +4,8 @@ import com.habitFlow.habitService.config.NotificationClient;
 import com.habitFlow.habitService.config.UserService;
 import com.habitFlow.habitService.dto.HabitTrackingDto;
 import com.habitFlow.habitService.dto.UserDto;
-import com.habitFlow.habitService.exception.ForbiddenException;
-import com.habitFlow.habitService.exception.ResourceNotFoundException;
+import com.habitFlow.habitService.exception.custom.ForbiddenException;
+import com.habitFlow.habitService.exception.custom.ResourceNotFoundException;
 import com.habitFlow.habitService.mapper.HabitTrackingMapper;
 import com.habitFlow.habitService.model.Habit;
 import com.habitFlow.habitService.model.HabitTracking;
@@ -13,7 +13,6 @@ import com.habitFlow.habitService.repository.HabitRepository;
 import com.habitFlow.habitService.repository.HabitTrackingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.habitFlow.habitService.dto.EmailRequest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -40,15 +39,15 @@ public class HabitTrackingService {
 
         HabitTracking tracking = HabitTrackingMapper.toEntity(dto);
         tracking.setHabit(habit);
+        HabitTracking saved = habitTrackingRepository.save(tracking);
 
-        EmailRequest email = new EmailRequest();
-        email.setTo(userdto.getEmail());
-        email.setSubject("New Habit Tracking 🎯");
-        email.setMessage("Hi, " + username + "! You added a new tracking for habit '"
-                + habit.getTitle() + "' on " + dto.getTrackDate() + ".");
+        notificationClient.dispatchNotification(
+                username,
+                "New Habit Tracking",
+                "You added a new tracking for habit '" + habit.getTitle() + "' on " + dto.getTrackDate()
+        );
 
-        notificationClient.sendEmail(email);
-        return HabitTrackingMapper.toDto(habitTrackingRepository.save(tracking));
+        return HabitTrackingMapper.toDto(saved);
     }
 
     public List<HabitTrackingDto> getTrackingsByHabit(String username, Long habitId) {

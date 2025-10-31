@@ -5,7 +5,6 @@ plugins {
 }
 dependencies {
 
-
 	// jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
@@ -18,21 +17,27 @@ dependencies {
 	testImplementation 'org.testcontainers:junit-jupiter:1.17.5'
 	testImplementation 'org.testcontainers:postgresql:1.17.5'
 
+	// Eureka Client
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:4.1.1'
 
-	// eureka Client
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-
-	// loadBalancer
+	// LoadBalancer
 	implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
 
-	//email sender
+	// Email sender
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	implementation 'com.github.pengrad:java-telegram-bot-api:7.11.0'
+
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
 }
+
 dependencyManagement {
 	imports {
 		mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2023.0.1'
 	}
 }
+
 test {
 	useJUnitPlatform()
 }

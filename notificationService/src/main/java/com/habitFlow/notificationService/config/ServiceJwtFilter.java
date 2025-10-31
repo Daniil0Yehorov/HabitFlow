@@ -59,6 +59,24 @@ public class ServiceJwtFilter extends OncePerRequestFilter {
                 System.out.println("[ServiceJwtFilter] Invalid service token");
             }
         }
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json");
+            response.getWriter().write("""
+        { "error": "Missing ROLE_SERVICE authority" }
+    """);
+            return;
+        }
+
+        String token = authHeader.substring(7);
+        if (!jwtUtil.isServiceToken(token, "HABIT-SERVICE") && !jwtUtil.isServiceToken(token, "USER-SERVICE")) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json");
+            response.getWriter().write("""
+        { "error": "Missing ROLE_SERVICE authority" }
+    """);
+            return;
+        }
 
         filterChain.doFilter(request, response);
     }

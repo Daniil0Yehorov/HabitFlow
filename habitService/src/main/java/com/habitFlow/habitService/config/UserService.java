@@ -1,6 +1,8 @@
 package com.habitFlow.habitService.config;
 
 import com.habitFlow.habitService.dto.UserDto;
+import com.habitFlow.habitService.exception.custom.ExternalServiceException;
+import com.habitFlow.habitService.exception.custom.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -28,23 +30,46 @@ public class UserService {
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<UserDto> response = restTemplate.exchange(
+            ResponseEntity<UserDto> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, UserDto.class);
+            if (response.getBody() == null) throw new ResourceNotFoundException("User not found: " + username);
+            return response.getBody();
+        } catch (HttpStatusCodeException ex) {
+            throw new ExternalServiceException("[UserService] Error: " + ex.getStatusCode(), ex);
+        } catch (Exception e) {
+            throw new ExternalServiceException("[UserService] Internal error", e);
+        }
+    }
+
+    public boolean existsById(Long userId) {
+        String token = tokenProvider.getServiceToken();
+        if (token == null || token.isBlank()) {
+            throw new ExternalServiceException("[UserService] Service token is null or empty!");
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        String url = "http://USER-SERVICE/auth/internal/id/" + userId;
+
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Void> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     requestEntity,
-                    UserDto.class
+                    Void.class
             );
 
-            if (response.getBody() == null) {
-                throw new RuntimeException("[UserService] User not found: " + username);
-            }
-
-            return response.getBody();
-
+            return response.getStatusCode().is2xxSuccessful();
         } catch (HttpStatusCodeException ex) {
-            throw new RuntimeException("[UserService] Error fetching userId: " + ex.getStatusCode(), ex);
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return false;
+            }
+            throw new ExternalServiceException("[UserService] Error checking user existence: " + ex.getStatusCode(), ex);
         } catch (Exception e) {
-            throw new RuntimeException("[UserService] Internal error fetching userId", e);
+            throw new ExternalServiceException("[UserService] Internal error checking user existence", e);
         }
     }
+
 }

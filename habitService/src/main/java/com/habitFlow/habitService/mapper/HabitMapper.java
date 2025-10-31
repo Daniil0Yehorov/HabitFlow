@@ -1,4 +1,5 @@
 package com.habitFlow.habitService.mapper;
+import com.habitFlow.habitService.dto.HabitCreateDto;
 import com.habitFlow.habitService.dto.HabitDto;
 import com.habitFlow.habitService.model.Habit;
 
@@ -21,6 +22,27 @@ public class HabitMapper {
         return Habit.builder()
                 .id(dto.getId())
                 .userId(dto.getUserId())
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .frequency(dto.getFrequency())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
+                .status(dto.getStatus())
+                .build();
+    }
+
+    public static HabitCreateDto ToDto(Habit habit) {
+        return HabitCreateDto.builder()
+                .title(habit.getTitle())
+                .description(habit.getDescription())
+                .frequency(habit.getFrequency())
+                .startDate(habit.getStartDate())
+                .endDate(habit.getEndDate())
+                .status(habit.getStatus())
+                .build();
+    }
+    public static Habit ToEntity(HabitCreateDto dto) {
+        return Habit.builder()
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .frequency(dto.getFrequency())

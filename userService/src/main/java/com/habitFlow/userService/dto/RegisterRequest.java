@@ -1,5 +1,6 @@
 package com.habitFlow.userService.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import jakarta.validation.constraints.Email;
@@ -10,16 +11,20 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Schema(description = "Request for user registration")
 public class RegisterRequest {
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 64, message = "Username must be 3–64 characters")
+    @NotBlank
+    @Size(min = 3, max = 64)
+    @Schema(description = "Username for login", example = "darkwoodik12311")
     private String username;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @NotBlank
+    @Size(min = 6)
+    @Schema(description = "Password for login", example = "darkwoodik1231")
     private String password;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank
+    @Email
+    @Schema(description = "User email address", example = "dakew23sf23fg@gmail.com")
     private String email;
 }
