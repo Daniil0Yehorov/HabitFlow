@@ -10,10 +10,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/auth/internal")
@@ -38,6 +37,10 @@ public class InternalController {
         return internalFacade.getUserByUsername(username);
     }
 
+    @Operation(
+            summary = "Check if user exists by ID (internal)",
+            description = "Used for validation between services, e.g. before habit creation or review publishing."
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User found and returned successfully"),
             @ApiResponse(responseCode = "403", description = "Missing ROLE_SERVICE authority"),
@@ -47,5 +50,20 @@ public class InternalController {
     public ResponseEntity<Void> checkUserExists(
             @Parameter(description = "ID of the user", example = "123") @PathVariable Long id) {
         return internalFacade.checkUserExists(id);
+    }
+
+    @Operation(
+            summary = "Get multiple users by IDs (internal)",
+            description = "Fetches multiple user records in one request. " +
+                    "Used by Habit or Notification services when processing batch operations."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of users returned successfully"),
+            @ApiResponse(responseCode = "403", description = "Missing ROLE_SERVICE authority")
+    })
+    @PostMapping("/ids")
+    public ResponseEntity<List<UserDto>> getUsersByIds(@RequestBody List<Long> ids) {
+        List<UserDto> users = internalFacade.getUsersByIds(ids);
+        return ResponseEntity.ok(users);
     }
 }

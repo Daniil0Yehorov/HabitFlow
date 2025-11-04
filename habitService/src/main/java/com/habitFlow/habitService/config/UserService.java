@@ -9,6 +9,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Component
 @RequiredArgsConstructor
 public class UserService {
@@ -72,4 +76,38 @@ public class UserService {
         }
     }
 
+    public Map<Long, UserDto> getUsersByIds(List<Long> userIds) {
+        if (userIds.isEmpty()) return Map.of();
+
+        String token = tokenProvider.getServiceToken();
+        if (token == null || token.isBlank()) {
+            throw new ExternalServiceException("[UserService] Service token is null or empty!");
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String url = "http://USER-SERVICE/auth/internal/ids";
+
+        HttpEntity<List<Long>> requestEntity = new HttpEntity<>(userIds, headers);
+
+        try {
+            ResponseEntity<UserDto[]> response = restTemplate.exchange(
+                    url, HttpMethod.POST, requestEntity, UserDto[].class
+            );
+            UserDto[] users = response.getBody();
+            if (users == null) return Map.of();
+
+            Map<Long, UserDto> result = new HashMap<>();
+            for (UserDto user : users) {
+                result.put(user.getId(), user);
+            }
+            return result;
+        } catch (HttpStatusCodeException ex) {
+            throw new ExternalServiceException("[UserService] Error fetching users: " + ex.getStatusCode(), ex);
+        } catch (Exception e) {
+            throw new ExternalServiceException("[UserService] Internal error fetching users", e);
+        }
+    }
 }

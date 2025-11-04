@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 /**
  * InternalFacade handles internal service-to-service user operations.
  * It centralizes checks and user retrieval logic for other services,
@@ -47,4 +48,13 @@ public class InternalFacade {
         return auth != null && auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_SERVICE"));
     }
+
+    public List<UserDto> getUsersByIds(List<Long> ids) {
+        if (!hasServiceRole()) {
+            throw new ForbiddenException("Missing ROLE_SERVICE authority");
+        }
+
+        return userService.findUsersByIds(ids);
+    }
+
 }

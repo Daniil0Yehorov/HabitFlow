@@ -25,7 +25,8 @@ public class HabitDto {
             " every morning")
     private String description;
 
-    @Schema(description = "Frequency of the habit (DAILY, WEEKLY, CUSTOM)", example = "DAILY")
+    @Schema(description = "Frequency of the habit (DAILY, WEEKLY, BIWEEKLY, MONTHLY, QUARTERLY, YEARLY)",
+            example = "DAILY")
     private Frequency frequency;
 
     @Schema(description = "Date when the habit starts", example = "2025-10-04")

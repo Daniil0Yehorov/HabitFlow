@@ -56,4 +56,14 @@ public class UserService {
     public boolean existsById(Long userId) {
         return userRepository.existsById(userId);
     }
+
+    public List<UserDto> findUsersByIds(List<Long> ids) {
+        return userRepository.findAllById(ids).stream()
+                .map(user -> UserDto.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .build())
+                .toList();
+    }
 }

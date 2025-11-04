@@ -144,8 +144,9 @@ public class NotificationService {
             }
             case TG -> {
                 if (settings.getStatus() == NotificationStatus.CONFIRMED) {
+                    String tgMessage = subject + ": " +message;
                     Long chatId = Long.valueOf(settings.getAddress());
-                    telegramBotService.sendMessage(chatId, message);
+                    telegramBotService.sendMessage(chatId, tgMessage);
                 } else {
                     settings.setStatus(NotificationStatus.FAILED);
                     settingsRepo.save(settings);

@@ -21,8 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -155,4 +157,70 @@ class InternalControllerIntegrationTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("Missing ROLE_SERVICE authority"));
     }
+
+    // ================= /auth/internal/ids =================
+
+    @Test
+    @DisplayName("✅ 200 - Successfully fetch multiple users with ROLE_SERVICE")
+    void getUsersByIds_success() throws Exception {
+        User user1 = User.builder()
+                .username("john_doe")
+                .email("john@example.com")
+                .password(passwordEncoder.encode("12345678"))
+                .emailVerified(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        User user2 = User.builder()
+                .username("alice")
+                .email("alice@example.com")
+                .password(passwordEncoder.encode("87654321"))
+                .emailVerified(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        userRepository.saveAll(List.of(user1, user2));
+
+        String jsonBody = "[" + user1.getId() + "," + user2.getId() + "]";
+
+        mockMvc.perform(post("/auth/internal/ids")
+                        .header("Authorization", "Bearer " + serviceToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("john_doe"))
+                .andExpect(jsonPath("$[1].username").value("alice"));
+    }
+
+    @Test
+    @DisplayName("❌ 403 - Forbidden when token is not a service token (POST /auth/internal/ids)")
+    void getUsersByIds_forbidden() throws Exception {
+        User user1 = User.builder()
+                .username("john_doe")
+                .email("john@example.com")
+                .password(passwordEncoder.encode("12345678"))
+                .emailVerified(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        User user2 = User.builder()
+                .username("alice")
+                .email("alice@example.com")
+                .password(passwordEncoder.encode("87654321"))
+                .emailVerified(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        userRepository.saveAll(List.of(user1, user2));
+
+        String jsonBody = "[" + user1.getId() + "," + user2.getId() + "]";
+
+        mockMvc.perform(post("/auth/internal/ids")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Missing ROLE_SERVICE authority"));
+    }
+
 }
